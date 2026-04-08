@@ -29,7 +29,7 @@
                  focus:outline-none focus:ring-2 focus:ring-orange-800 focus:border-transparent"
         >
           <option value="" disabled>Выберите технологию</option>
-          <option v-for="option in stackOptions" :key="option.value" :value="option.value">
+          <option v-for="option in STACK_OPTIONS" :key="option.value" :value="option.value">
             {{ option.label }}
           </option>
         </select>
@@ -58,7 +58,7 @@
       <p v-if="errors.description" class="text-red-800   pt-1">{{ errors.description }}</p>
     </div>
 
-    <!-- Кнопка -->
+    <!-- Сабмит -->
     <button
       type="submit"
       :disabled="isSubmitting"
@@ -73,13 +73,9 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
+import { STACK_OPTIONS } from '@/constants/stacks'
 
-const props = defineProps({
-  stackOptions: {
-    type: Array,
-    required: true
-  }
-})
+const props = defineProps({})
 
 const emit = defineEmits(['task-created'])
 
@@ -112,7 +108,7 @@ const validateForm = () => {
   }
 
   if (!form.stack) {
-    errors.stack = 'Выберите технологию / стек'
+    errors.stack = 'Выберите стек'
     isValid = false
   }
 
@@ -127,7 +123,7 @@ const validateForm = () => {
   return isValid
 }
 
-// Сброс формы
+// Ресет формы
 const resetForm = () => {
   form.title = ''
   form.stack = ''

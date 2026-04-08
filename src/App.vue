@@ -55,7 +55,7 @@ const handleFilterClick = (filterValue) => {
       <div class="w-full flex">
         <div class="w-full grid grid-cols-1 md:grid-cols-3">
 
-          <!-- Левая колонка — форма -->
+          <!-- Форма -->
           <section class="md:col-span-1 flex flex-col bg-orange-500 px-6 py-8 text-white">
             <h2 class="text-2xl font-semibold">Добавить задачу</h2>
 
@@ -67,14 +67,13 @@ const handleFilterClick = (filterValue) => {
             </div>
           </section>
 
-          <!-- Правая колонка — задачи -->
           <section class="w-full md:col-span-2 flex flex-col bg-orange-200 px-6 py-8 md:overflow-hidden">
             <h2 class="text-2xl font-semibold text-black">Созданные задачи</h2>
 
             <!-- Фильтры -->
             <div class="w-full pt-6 pb-6">
               <p class="text-orange-600 font-normal">Фильтровать по стеку:</p>
-              <div class="flex flex-wrap gap-2 min-w-max pt-2">
+              <div class="w-full flex flex-wrap gap-2 pt-2">
                 <FilterButton
                   v-for="option in store.stackOptions"
                   :key="option.value"

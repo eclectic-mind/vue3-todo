@@ -10,10 +10,9 @@
     type.value = notificationType
     show.value = true
 
-    // Автоматически скрываем через 4 секунды
     setTimeout(() => {
       show.value = false
-    }, 40000)
+    }, 5000)
   }
 
   defineExpose({
@@ -24,11 +23,11 @@
 <template>
   <div
     v-if="show"
-    class="fixed bottom-6 right-6 z-50 max-w-sm w-full"
+    class="fixed bottom-6 right-6 z-50"
   >
     <div
       :class="[
-        'flex items-center gap-3 px-5 py-4 rounded-2xl',
+        'flex items-center gap-3 px-5 py-4 rounded-lg',
         type === 'success'
           ? 'bg-green-600 text-white'
           : 'bg-red-600 text-white'
