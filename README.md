@@ -2,7 +2,7 @@
 
 Современное одностраничное приложение для управления задачами с удобным интерфейсом и фильтрацией по технологиям.
 
-![Скриншот приложения](https://via.placeholder.com/800x400?text=Todo+App+Screenshot)
+![Скриншот приложения](https://vue3-todo-peach.vercel.app/todo-screen.png)
 
 ## ✨ Основная функциональность:
 
@@ -23,4 +23,4 @@
 
 ## 🚀 Демо:
 
-**[https://твоя-ссылка-на-деплой.vercel.app](https://твоя-ссылка-на-деплой.vercel.app)**
+**[https://vue3-todo-peach.vercel.app/](https://vue3-todo-peach.vercel.app/)**
