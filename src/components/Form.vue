@@ -1,219 +1,160 @@
-<!-- components/TaskForm.vue -->
 <template>
   <form @submit.prevent="handleSubmit" class="space-y-4">
-    <!-- Поле "Название" -->
+    <!-- Название задачи -->
     <div class="pb-4">
       <label for="title" class="block font-medium text-white pb-2">
         Название задачи
       </label>
       <input
-        v-model="localForm.title"
+        v-model.trim="form.title"
         id="title"
         type="text"
         placeholder="Введите название задачи"
         class="w-full px-3 py-2 bg-white rounded-md text-gray-900 placeholder-gray-400
-        focus:outline-none focus:ring-2 focus:ring-orange-800 focus:border-transparent"
+               focus:outline-none focus:ring-2 focus:ring-orange-800 focus:border-transparent"
       />
+      <p v-if="errors.title" class="text-red-800   pt-1">{{ errors.title }}</p>
     </div>
 
-    <!-- Поле "Стек" (select) -->
+    <!-- Стек -->
     <div class="pb-4">
       <label for="stack" class="block font-medium text-white pb-2">
         Технология / стек
       </label>
-      <select
-        v-model="localForm.stack"
-        id="stack"
-        class="w-full px-3 py-2 bg-white rounded-md text-gray-900
-        focus:outline-none focus:ring-2 focus:ring-orange-800 focus:border-transparent"
-      >
-        <option value="" disabled>Выберите технологию</option>
-        <option v-for="option in stackOptions" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
+      <div class="relative">
+        <select
+          v-model="form.stack"
+          id="stack"
+          class="w-full px-3 py-2 bg-white rounded-md text-gray-900 appearance-none
+                 focus:outline-none focus:ring-2 focus:ring-orange-800 focus:border-transparent"
+        >
+          <option value="" disabled>Выберите технологию</option>
+          <option v-for="option in stackOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+          <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+      <p v-if="errors.stack" class="text-red-800   pt-1">{{ errors.stack }}</p>
     </div>
 
-    <!-- Поле "Описание" (textarea) -->
+    <!-- Описание -->
     <div class="pb-4">
       <label for="description" class="block font-medium text-white pb-2">
         Описание задачи
       </label>
       <textarea
-        v-model="localForm.description"
+        v-model.trim="form.description"
         id="description"
         rows="4"
         placeholder="Подробно опишите задачу..."
-        class="w-full px-3 py-2 bg-white rounded-md text-gray-900
-        placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-800 focus:border-transparent resize-none"
+        class="w-full px-3 py-2 bg-white rounded-md text-gray-900 placeholder-gray-400
+               focus:outline-none focus:ring-2 focus:ring-orange-800 focus:border-transparent resize-none"
       ></textarea>
+      <p v-if="errors.description" class="text-red-800   pt-1">{{ errors.description }}</p>
     </div>
 
-    <!-- Кнопка отправки -->
+    <!-- Кнопка -->
     <button
       type="submit"
-      class="w-full bg-red-800 hover:bg-red-900 text-white font-semibold py-4 text-lg uppercase
-      px-5 rounded-md transition duration-200 cursor-pointer focus:outline-none focus:ring-2
-      focus:ring-red-900"
+      :disabled="isSubmitting"
+      class="w-full bg-red-800 hover:bg-red-900 disabled:bg-red-900/70 disabled:cursor-not-allowed
+             text-white font-semibold py-4 text-lg uppercase px-5 rounded-md transition duration-200
+             focus:outline-none focus:ring-2 focus:ring-red-900"
     >
-      Создать задачу
+      {{ isSubmitting ? 'Создаём...' : 'Создать задачу' }}
     </button>
   </form>
 </template>
 
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, ref } from 'vue'
 
-// Пропсы
 const props = defineProps({
-  initialForm: {
-    type: Object,
-    default: () => ({
-      id: '',
-      title: '',
-      stack: '',
-      description: ''
-    })
-  },
   stackOptions: {
     type: Array,
-    default: () => [
-      { value: 'react', label: 'React' },
-      { value: 'vue', label: 'Vue' },
-      { value: 'angular', label: 'Angular' },
-      { value: 'typescript', label: 'TypeScript' },
-      { value: 'design', label: 'Design' },
-      { value: 'nodejs', label: 'Node.js' },
-      { value: 'seo', label: 'SEO' },
-      { value: 'python', label: 'Python' },
-      { value: 'css', label: 'CSS' }
-    ]
+    required: true
   }
 })
 
-// События
-const emit = defineEmits(['task-created', 'form-update'])
+const emit = defineEmits(['task-created'])
 
-// Локальное состояние формы
-const localForm = reactive({
-  title: props.initialForm.title,
-  stack: props.initialForm.stack,
-  description: props.initialForm.description
+const form = reactive({
+  title: '',
+  stack: '',
+  description: ''
 })
 
-// Watch для отслеживания изменений каждого поля
-watch(() => localForm.title, (newValue, oldValue) => {
-  console.log(`Название изменено: "${oldValue}" → "${newValue}"`)
-
-  if (newValue && newValue.length < 3) {
-    console.warn('Название слишком короткое (минимум 3 символа)')
-  }
-  emit('form-update', { field: 'title', value: newValue })
+const errors = reactive({
+  title: '',
+  stack: '',
+  description: ''
 })
 
-watch(() => localForm.stack, (newValue, oldValue) => {
-  console.log(`Стек изменен: "${oldValue || 'не выбран'}" → "${newValue || 'не выбран'}"`)
-  emit('form-update', { field: 'stack', value: newValue })
-})
+const isSubmitting = ref(false)
 
-watch(() => localForm.description, (newValue, oldValue) => {
-  const newLength = newValue?.length || 0
-  const oldLength = oldValue?.length || 0
-  console.log(`Описание изменено: ${oldLength} симв. → ${newLength} симв.`)
+// Валидация
+const validateForm = () => {
+  let isValid = true
 
-  if (newLength > 0 && newLength < 20) {
-    console.warn('Описание слишком короткое (рекомендуется минимум 20 символов)')
-  } else if (newLength > 500) {
-    console.warn('Описание слишком длинное (максимум 500 символов)')
-  }
-  emit('form-update', { field: 'description', value: newValue })
-})
+  // Сброс ошибок
+  errors.title = ''
+  errors.stack = ''
+  errors.description = ''
 
-// Отслеживание всей формы
-watch(
-  () => localForm,
-  (newValue) => {
-    console.log('Форма обновлена:', newValue)
-
-    const isFormValid = newValue.title && newValue.stack && newValue.description
-    if (isFormValid) {
-      console.log('✅ Все поля заполнены, форма готова к отправке')
-    } else {
-      const missingFields = []
-      if (!newValue.title) missingFields.push('название')
-      if (!newValue.stack) missingFields.push('стек')
-      if (!newValue.description) missingFields.push('описание')
-      console.log(`❌ Не заполнены поля: ${missingFields.join(', ')}`)
-    }
-  },
-  { deep: true }
-)
-
-// Debounce для поиска
-let debounceTimeout
-watch(() => localForm.title, (newValue) => {
-  clearTimeout(debounceTimeout)
-  debounceTimeout = setTimeout(() => {
-    if (newValue) {
-      console.log(`🔍 Поиск похожих задач: "${newValue}"`)
-    }
-  }, 500)
-})
-
-// Обработчик отправки
-const handleSubmit = () => {
-  // Валидация
-  const errors = []
-
-  if (!localForm.title || localForm.title.trim().length < 3) {
-    errors.push('Название должно содержать минимум 3 символа')
+  if (!form.title || form.title.length < 3) {
+    errors.title = 'Название должно содержать минимум 3 символа'
+    isValid = false
   }
 
-  if (!localForm.stack) {
-    errors.push('Выберите технологию/стек')
+  if (!form.stack) {
+    errors.stack = 'Выберите технологию / стек'
+    isValid = false
   }
 
-  if (!localForm.description || localForm.description.trim().length < 20) {
-    errors.push('Описание должно содержать минимум 20 символов')
+  if (!form.description || form.description.length < 20) {
+    errors.description = 'Описание должно содержать минимум 20 символов'
+    isValid = false
+  } else if (form.description.length > 800) {
+    errors.description = 'Описание слишком длинное (максимум 800 символов)'
+    isValid = false
   }
 
-  if (errors.length > 0) {
-    console.error('Ошибки валидации:', errors)
-    alert(`Пожалуйста, исправьте следующие ошибки:\n${errors.join('\n')}`)
-    return
-  }
-
-  // Создаем задачу
-  const newTask = {
-    id: Date.now(),
-    title: localForm.title.trim(),
-    stack: localForm.stack,
-    description: localForm.description.trim(),
-    createdAt: new Date().toISOString()
-  }
-
-  console.log('📝 Создана новая задача:', newTask)
-
-  // Отправляем событие родителю
-  emit('task-created', newTask)
-
-  // Очищаем форму
-  resetForm()
-
-  alert('Задача успешно создана!')
+  return isValid
 }
 
 // Сброс формы
 const resetForm = () => {
-  localForm.title = ''
-  localForm.stack = ''
-  localForm.description = ''
-  console.log('Форма сброшена')
+  form.title = ''
+  form.stack = ''
+  form.description = ''
 }
 
-// Доступ к методам из родителя
-defineExpose({
-  resetForm,
-  getFormData: () => ({ ...localForm })
-})
+// Обработчик отправки
+const handleSubmit = async () => {
+  if (!validateForm()) return
+
+  isSubmitting.value = true
+
+  try {
+    const newTask = {
+      title: form.title.trim(),
+      stack: form.stack,
+      description: form.description.trim()
+    }
+
+    emit('task-created', newTask)
+
+    resetForm()
+  } catch (err) {
+    console.error('Ошибка при создании задачи:', err)
+    alert('Произошла ошибка при создании задачи')
+  } finally {
+    isSubmitting.value = false
+  }
+}
 </script>

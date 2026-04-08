@@ -1,89 +1,43 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useTasksStore } from './stores/tasks'
 
 import Card from './components/Card.vue'
 import FilterButton from './components/FilterButton.vue'
 import Form from './components/Form.vue'
+import Toast from './components/Toast.vue'
+
+const store = useTasksStore()
 
 const activeFilter = ref('all')
-const taskFormRef = ref(null)
-const tasks = ref([])
+const notificationRef = ref(null)
 
-// Уже имеющиеся задачи
-const oldTasks = [
-  {
-    id: 1,
-    title: 'React Компоненты высшего порядка',
-    stack: 'react',
-    description: 'React Hooks позволяют использовать состояние и другие возможности React без написания классов. Они упрощают логику компонентов, делая код более читаемым и переиспользуемым. useState, useEffect, useContext — это базовые хуки, которые используются в каждом проекте. Кастомные хуки помогают выносить повторяющуюся логику в отдельные функции.'
-  },
-  {
-    id: 2,
-    title: 'TypeScript типизация данных',
-    stack: 'typescript',
-    description: 'TypeScript добавляет статическую типизацию в JavaScript, что помогает находить ошибки на этапе разработки. Интерфейсы, типы, дженерики позволяют создавать самодокументируемый код.'
-  },
-  {
-    id: 3,
-    title: 'Tailwind CSS утилиты',
-    stack: 'css',
-    description: 'Tailwind CSS — это utility-first фреймворк, который предоставляет низкоуровневые классы для построения интерфейсов прямо в разметке. Вместо написания кастомного CSS вы комбинируете готовые утилиты: flex, padding, margin, цвета, отзывчивость.'
-  },
-  {
-    id: 4,
-    title: 'Next.js серверный рендеринг',
-    stack: 'react',
-    description: 'Next.js — это React фреймворк для production с серверным рендерингом, статической генерацией и маршрутизацией на основе файловой системы. Он автоматически оптимизирует производительность, поддерживает API Routes и позволяет легко настраивать мета-теги для SEO. Подходит для создания быстрых веб-приложений.'
-  },
-  {
-    id: 5,
-    title: 'Современный UI/UX дизайн интерфейсов',
-    stack: 'design',
-    description: 'Современный UI/UX дизайн включает в себя не только визуальную составляющую, но и глубокое понимание поведения пользователей. Использование дизайн-систем, компонентных подходов и прототипирования ускоряет разработку в разы. Адаптивный дизайн, микро-анимации и доступность интерфейсов — ключевые тренды последних лет. Инструменты вроде Figma и Sketch позволяют создавать интерактивные прототипы любой сложности.'
-  },
-  {
-    id: 6,
-    title: 'Оптимизация сайта для поисковых систем',
-    stack: 'seo',
-    description: 'SEO-оптимизация включает в себя комплекс мер для повышения позиций сайта в результатах выдачи поисковых систем. Ключевые аспекты: семантическое ядро, правильная структура URL, мета-теги и микроразметка Schema.org. Скорость загрузки страниц и мобильная адаптация напрямую влияют на ранжирование в Google. Качественный контент и внешние ссылки остаются основными факторами доверия поисковых систем к ресурсу.'
+// Загрузка задач
+onMounted(() => {
+  store.loadTasks()
+})
+
+// Фильтрация
+const filteredTasks = computed(() => {
+  if (activeFilter.value === 'all') {
+    return store.tasks
   }
-]
+  return store.tasks.filter(task => task.stack === activeFilter.value)
+})
 
-// Стеки
-const stackOptions = [
-  { value: 'react', label: 'React' },
-  { value: 'vue', label: 'Vue' },
-  { value: 'angular', label: 'Angular' },
-  { value: 'typescript', label: 'TypeScript' },
-  { value: 'design', label: 'Design' },
-  { value: 'nodejs', label: 'Node.js' },
-  { value: 'seo', label: 'SEO' },
-  { value: 'python', label: 'Python' },
-  { value: 'css', label: 'CSS' }
-]
-
-// Обработчик создания задачи
+// Обработчики
 const handleTaskCreated = (newTask) => {
-  tasks.value.push(newTask)
-  console.log('Задача добавлена в список:', newTask)
+  store.addTask(newTask)
+  notificationRef.value?.showNotification('Задача успешно добавлена!', 'success')
 }
 
-// Обработчик обновления формы
-const handleFormUpdate = ({ field, value }) => {
-  console.log(`Поле ${field} обновлено:`, value)
-}
-
-// Обработчик удаления задачи
 const handleTaskDelete = (taskId) => {
-  tasks.value = tasks.value.filter(task => task.id !== taskId);
-  oldTasks.value = oldTasks.value.filter(task => task.id !== taskId);
-  console.log('Задача удалена:', taskId)
+  store.deleteTask(taskId)
+  notificationRef.value?.showNotification('Задача удалена', 'success')
 }
 
-// Обработчик клика на фильтр
 const handleFilterClick = (filterValue) => {
   activeFilter.value = filterValue
-  console.log('Выбран фильтр:', filterValue)
 }
 </script>
 
@@ -99,27 +53,22 @@ const handleFilterClick = (filterValue) => {
 
     <main class="flex-1 flex min-h-0 text-base">
       <div class="w-full flex">
-        <div class="grid grid-cols-1 md:grid-cols-3">
+        <div class="w-full grid grid-cols-1 md:grid-cols-3">
 
-          <!-- Левая колонка -->
+          <!-- Левая колонка — форма -->
           <section class="md:col-span-1 flex flex-col bg-orange-500 px-6 py-8 text-white">
             <h2 class="text-2xl font-semibold">Добавить задачу</h2>
 
-            <!-- Форма -->
             <div class="flex-1 pt-6">
               <Form
-                ref="taskFormRef"
-                :stack-options="stackOptions"
+                :stack-options="store.stackOptions"
                 @task-created="handleTaskCreated"
-                @form-update="handleFormUpdate"
               />
             </div>
-
-            <pre class="text-xs mt-4">{{ JSON.stringify(tasks, null, 2) }}</pre>
           </section>
 
-          <!-- Правая колонка -->
-          <section class="md:col-span-2 flex flex-col bg-orange-200 px-6 py-8  md:overflow-hidden">
+          <!-- Правая колонка — задачи -->
+          <section class="w-full md:col-span-2 flex flex-col bg-orange-200 px-6 py-8 md:overflow-hidden">
             <h2 class="text-2xl font-semibold text-black">Созданные задачи</h2>
 
             <!-- Фильтры -->
@@ -127,10 +76,10 @@ const handleFilterClick = (filterValue) => {
               <p class="text-orange-600 font-normal">Фильтровать по стеку:</p>
               <div class="flex flex-wrap gap-2 min-w-max pt-2">
                 <FilterButton
-                  v-for="filter in stackOptions"
-                  :key="filter.value"
-                  :label="filter.label"
-                  :filter-value="filter.value"
+                  v-for="option in store.stackOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :filter-value="option.value"
                   :active-filter="activeFilter"
                   @click="handleFilterClick"
                 />
@@ -138,24 +87,34 @@ const handleFilterClick = (filterValue) => {
             </div>
 
             <!-- Карточки -->
-            <div class="flex-1 md:pr-2 md:overflow-y-auto">
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  <Card
-                    v-for="task in oldTasks"
-                    :key="task.id"
-                    :id="task.id"
-                    :title="task.title"
-                    :stack="task.stack"
-                    :description="task.description"
-                    @delete="handleTaskDelete"
-                  />
-                </div>
-            </div>
+            <div class="w-full flex-1 md:pr-2 md:overflow-y-auto">
+              <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <Card
+                  v-for="task in filteredTasks"
+                  :key="task.id"
+                  :id="task.id"
+                  :title="task.title"
+                  :stack="task.stack"
+                  :description="task.description"
+                  @delete="handleTaskDelete"
+                />
+              </div>
 
+              <!-- Заглушка -->
+              <div v-if="filteredTasks.length === 0"
+                   class="w-full text-center text-gray-600 bg-white/80 border border-orange-400 rounded-sm py-8 px-3 mt-8">
+                {{ activeFilter === 'all'
+                ? 'Ни одной задачи не создано'
+                : `Нет задач по стеку "${activeFilter}"` }}
+              </div>
+            </div>
           </section>
 
         </div>
       </div>
     </main>
+
+    <!-- Уведомление -->
+    <Toast ref="notificationRef" />
   </div>
 </template>
